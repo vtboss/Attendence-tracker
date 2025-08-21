@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .header p {
+            text-align: center;
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #4a5568;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Setup Tab Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4);
+        }
+
+        /* Timetable Grid */
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: 120px repeat(7, 1fr);
+            gap: 2px;
+            margin: 20px 0;
+            background: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .timetable-cell {
+            background: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .timetable-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+        }
+
+        .period-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Subject List */
+        .subject-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .subject-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Attendance Tab Styles */
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .attendance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .period-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .period-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .period-card.present {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .period-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .period-time {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .period-subject {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox.checked {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .custom-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+        }
+
+        /* Dashboard Styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .subject-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .subject-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .subject-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.low {
+            background: linear-gradient(90deg, #e53e3e, #c53030);
+        }
+
+        .progress-fill.medium {
+            background: linear-gradient(90deg, #ed8936, #dd6b20);
+        }
+
+        .attendance-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .export-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .timetable-grid {
+                grid-template-columns: 80px repeat(7, 1fr);
+                font-size: 12px;
+            }
+
+            .date-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .attendance-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #48bb78;
+            color: #22543d;
+        }
+
+        .alert-warning {
+            background: #fffbf0;
+            border: 1px solid #ed8936;
+            color: #744210;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            border: 1px solid #e53e3e;
+            color: #742a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Attendance Tracker</h1>
+            <p>Electronics and Communication Engineering Student</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('setup')">📝 Setup</button>
+            <button class="nav-tab" onclick="showTab('attendance')">✅ Mark Attendance</button>
+            <button class="nav-tab" onclick="showTab('dashboard')">📊 Dashboard</button>
+        </div>
+
+        <!-- Setup Tab -->
+        <div id="setup" class="tab-content active">
+            <h2>Timetable Setup</h2>
+            
+            <div class="form-group">
+                <label for="subjectInput">Add Subject:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="subjectInput" placeholder="e.g., Digital Signal Processing">
+                    <button class="btn" onclick="addSubject()">Add Subject</button>
+                </div>
+            </div>
+
+            <div class="subject-list" id="subjectList"></div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 20px;">Weekly Timetable</h3>
+            <div class="timetable-grid" id="timetableGrid"></div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="saveTimetable()">💾 Save Timetable</button>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+
+        <!-- Attendance Tab -->
+        <div id="attendance" class="tab-content">
+            <h2>Mark Attendance</h2>
+            
+            <div class="date-selector">
+                <label for="attendanceDate">Select Date:</label>
+                <input type="date" id="attendanceDate" onchange="loadAttendanceForDate()">
+                <button class="btn" onclick="setToday()">📅 Today</button>
+            </div>
+
+            <div id="attendanceAlert"></div>
+            <div class="attendance-grid" id="attendanceGrid"></div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <h2>Attendance Summary</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="overallPercentage">0%</div>
+                    <div class="stat-label">Overall Attendance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalClasses">0</div>
+                    <div class="stat-label">Total Classes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="attendedClasses">0</div>
+                    <div class="stat-label">Classes Attended</div>
+                </div>
+            </div>
+
+            <div class="subject-stats" id="subjectStats"></div>
+
+            <div class="export-section">
+                <h3>Export Data</h3>
+                <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                    <button class="btn" onclick="exportToCSV()">📄 Export to CSV</button>
+                    <button class="btn" onclick="exportToJSON()">📋 Export to JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        let timetable = JSON.parse(localStorage.getItem('timetable')) || {};
+        let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+
+        const periods = [
+            '9:00-10:00',
+            '10:00-11:00',
+            '11:00-12:00',
+            '12:00-1:00',
+            '2:00-3:00',
+            '3:00-4:00',
+            '4:00-5:00'
+        ];
+
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        // Initialize the app
+        window.onload = function() {
+            loadSubjects();
+            generateTimetableGrid();
+            loadTimetable();
+            setToday();
+            updateDashboard();
+        };
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Load data when switching to specific tabs
+            if (tabName === 'attendance') {
+                loadAttendanceForDate();
+            } else if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        // Subject management
+        function addSubject() {
+            const input = document.getElementById('subjectInput');
+            const subjectName = input.value.trim();
+            
+            if (subjectName && !subjects.includes(subjectName)) {
+                subjects.push(subjectName);
+                saveSubjects();
+                loadSubjects();
+                input.value = '';
+                generateTimetableGrid();
+            }
+        }
+
+        function removeSubject(subjectName) {
+            subjects = subjects.filter(s => s !== subjectName);
+            
+            // Remove from timetable
+            Object.keys(timetable).forEach(day => {
+                Object.keys(timetable[day]).forEach(period => {
+                    if (timetable[day][period] === subjectName) {
+                        delete timetable[day][period];
+                    }
+                });
+            });
+            
+            // Remove from attendance
+            Object.keys(attendance).forEach(date => {
+                Object.keys(attendance[date]).forEach(key => {
+                    if (key.includes(subjectName)) {
+                        delete attendance[date][key];
+                    }
+                });
+            });
+            
+            saveSubjects();
+            saveTimetable();
+            saveAttendance();
+            loadSubjects();
+            generateTimetableGrid();
+            updateDashboard();
+        }
+
+        function saveSubjects() {
+            localStorage.setItem('subjects', JSON.stringify(subjects));
+        }
+
+        function loadSubjects() {
+            const subjectList = document.getElementById('subjectList');
+            subjectList.innerHTML = '';
+            
+            subjects.forEach(subject => {
+                const subjectItem = document.createElement('div');
+                subjectItem.className = 'subject-item';
+                subjectItem.innerHTML = `
+                    <span>${subject}</span>
+                    <button class="btn btn-danger" onclick="removeSubject('${subject}')" style="padding: 5px 10px; font-size: 14px;">Remove</button>
+                `;
+                subjectList.appendChild(subjectItem);
+            });
+        }
+
+        // Timetable management
+        function generateTimetableGrid() {
+            const grid = document.getElementById('timetableGrid');
+            grid.innerHTML = '';
+            
+            // Header row
+            const headerCells = ['Period', ...days];
+            headerCells.forEach(header => {
+                const cell = document.createElement('div');
+                cell.className = 'timetable-cell timetable-header';
+                cell.textContent = header;
+                grid.appendChild(cell);
+            });
+            
+            // Period rows
+            periods.forEach(period => {
+                // Period time cell
+                const periodCell = document.createElement('div');
+                periodCell.className = 'timetable-cell timetable-header';
+                periodCell.textContent = period;
+                grid.appendChild(periodCell);
+                
+                // Day cells
+                days.forEach(day => {
+                    const cell = document.createElement('div');
+                    cell.className = 'timetable-cell';
+                    
+                    const select = document.createElement('select');
+                    select.className = 'period-input';
+                    select.onchange = () => updateTimetable(day, period, select.value);
+                    
+                    // Add empty option
+                    const emptyOption = document.createElement('option');
+                    emptyOption.value = '';
+                    emptyOption.textContent = 'Free';
+                    select.appendChild(emptyOption);
+                    
+                    // Add subject options
+                    subjects.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject;
+                        option.textContent = subject;
+                        select.appendChild(option);
+                    });
+                    
+                    // Set current value if exists
+                    if (timetable[day] && timetable[day][period]) {
+                        select.value = timetable[day][period];
+                    }
+                    
+                    cell.appendChild(select);
+                    grid.appendChild(cell);
+                });
+            });
+        }
+
+        function updateTimetable(day, period, subject) {
+            if (!timetable[day]) {
+                timetable[day] = {};
+            }
+            
+            if (subject) {
+                timetable[day][period] = subject;
+            } else {
+                delete timetable[day][period];
+            }
+        }
+
+        function saveTimetable() {
+            localStorage.setItem('timetable', JSON.stringify(timetable));
+            showAlert('success', 'Timetable saved successfully!');
+        }
+
+        function loadTimetable() {
+            generateTimetableGrid();
+        }
+
+        // Attendance management
+        function setToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+            loadAttendanceForDate();
+        }
+
+        function loadAttendanceForDate() {
+            const dateInput = document.getElementById('attendanceDate');
+            const selectedDate = dateInput.value;
+            
+            if (!selectedDate) return;
+            
+            const dayName = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
+            const daySchedule = timetable[dayName] || {};
+            
+            const grid = document.getElementById('attendanceGrid');
+            const alertDiv = document.getElementById('attendanceAlert');
+            grid.innerHTML = '';
+            alertDiv.innerHTML = '';
+            
+            if (Object.keys(daySchedule).length === 0) {
+                alertDiv.innerHTML = '<div class="alert alert-warning">No classes scheduled for this day.</div>';
+                return;
+            }
+            
+            periods.forEach(period => {
+                const subject = daySchedule[period];
+                if (subject) {
+                    const periodCard = document.createElement('div');
+                    const attendanceKey = `${selectedDate}_${period}_${subject}`;
+                    const isPresent = attendance[selectedDate] && attendance[selectedDate][attendanceKey];
+                    
+                    periodCard.className = `period-card ${isPresent ? 'present' : ''}`;
+                    periodCard.innerHTML = `
+                        <div class="period-header">
+                            <div class="period-time">${period}</div>
+                        </div>
+                        <div class="period-subject">${subject}</div>
+                        <div class="checkbox-container">
+                            <div class="custom-checkbox ${isPresent ? 'checked' : ''}" 
+                                 onclick="toggleAttendance('${selectedDate}', '${period}', '${subject}', this)">
+                            </div>
+                            <label>Present</label>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(periodCard);
+                }
+            });
+        }
+
+        function toggleAttendance(date, period, subject, checkboxElement) {
+            const attendanceKey = `${date}_${period}_${subject}`;
+            
+            if (!attendance[date]) {
+                attendance[date] = {};
+            }
+            
+            const isCurrentlyPresent = attendance[date][attendanceKey];
+            
+            if (isCurrentlyPresent) {
+                delete attendance[date][attendanceKey];
+                checkboxElement.classList.remove('checked');
+                checkboxElement.parentElement.parentElement.classList.remove('present');
+            } else {
+                attendance[date][attendanceKey] = true;
+                checkboxElement.classList.add('checked');
+                checkboxElement.parentElement.parentElement.classList.add('present');
+            }
+            
+            saveAttendance();
+        }
+
+        function saveAttendance() {
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+        }
+
+        // Dashboard and statistics
+        function updateDashboard() {
+            const stats = calculateStats();
+            
+            document.getElementById('overallPercentage').textContent = stats.overall.percentage + '%';
+            document.getElementById('totalClasses').textContent = stats.overall.total;
+            document.getElementById('attendedClasses').textContent = stats.overall.attended;
+            
+            const subjectStatsDiv = document.getElementById('subjectStats');
+            subjectStatsDiv.innerHTML = '';
+            
+            Object.entries(stats.subjects).forEach(([subject, data]) => {
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                
+                let progressClass = '';
+                if (data.percentage < 60) progressClass = 'low';
+                else if (data.percentage < 75) progressClass = 'medium';
+                
+                card.innerHTML = `
+                    <div class="subject-name">${subject}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${progressClass}" style="width: ${data.percentage}%"></div>
+                    </div>
+                    <div class="attendance-info">
+                        <span>${data.attended}/${data.total} classes</span>
+                        <span>${data.percentage}%</span>
+                    </div>
+                `;
+                
+                subjectStatsDiv.appendChild(card);
+            });
+        }
+
+        function calculateStats() {
+            const stats = {
+                overall: { total: 0, attended: 0, percentage: 0 },
+                subjects: {}
+            };
+            
+            // Initialize subject stats
+            subjects.forEach(subject => {
+                stats.subjects[subject] = { total: 0, attended: 0, percentage: 0 };
+            });
+            
+            // Count total possible classes from timetable
+            Object.entries(timetable).forEach(([day, schedule]) => {
+                Object.entries(schedule).forEach(([period, subject]) => {
+                    stats.subjects[subject].total++;
+                    stats.overall.total++;
+                });
+            });
+            
+            // Count attended classes
+            Object.entries(attendance).forEach(([date, dayAttendance]) => {
+                Object.keys(dayAttendance).forEach(attendanceKey => {
+                    const parts = attendanceKey.split('_');
+                    if (parts.length >= 3) {
+                        const subject = parts.slice(2).join('_');
+                        if (stats.subjects[subject]) {
+                            stats.subjects[subject].attended++;
+                            stats.overall.attended++;
+                        }
+                    }
+                });
+            });
+            
+            // Calculate percentages
+            stats.overall.percentage = stats.overall.total > 0 
+                ? Math.round((stats.overall.attended / stats.overall.total) * 100) 
+                : 0;
+            
+            Object.keys(stats.subjects).forEach(subject => {
+                const subjectData = stats.subjects[subject];
+                subjectData.percentage = subjectData.total > 0 
+                    ? Math.round((subjectData.attended / subjectData.total) * 100) 
+                    : 0;
+            });
+            
+            return stats;
+        }
+
+        // Export functionality
+        function exportToCSV() {
+            const stats = calculateStats();
+            let csv = 'Subject,Total Classes,Attended Classes,Percentage\n';
+            
+            Object.entries(stats.subjects).forEach(([subject, data]) => {
+                csv += `${subject},${data.total},${data.attended},${data.percentage}%\n`;
+            });
+            
+            csv += `\nOverall,${stats.overall.total},${stats.overall.attended},${stats.overall.percentage}%\n`;
+            
+            downloadFile(csv, 'attendance_report.csv', 'text/csv');
+        }
+
+        function exportToJSON() {
+            const exportData = {
+                subjects,
+                timetable,
+                attendance,
+                exportDate: new Date().toISOString(),
+                stats: calculateStats()
+            };
+            
+            downloadFile(JSON.stringify(exportData, null, 2), 'attendance_data.json', 'application/json');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Utility functions
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                localStorage.removeItem('subjects');
+                localStorage.removeItem('timetable');
+                localStorage.removeItem('attendance');
+                
+                subjects = [];
+                timetable = {};
+                attendance = {};
+                
+                loadSubjects();
+                generateTimetableGrid();
+                loadAttendanceForDate();
+                updateDashboard();
+                
+                showAlert('success', 'All data cleared successfully!');
+            }
+        }
+
+        function showAlert(type, message) {
+            // Create alert for setup tab
+            const setupTab = document.getElementById('setup');
+            let existingAlert = setupTab.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            setupTab.insertBefore(alert, setupTab.firstChild.nextSibling);
+            
+            // Remove alert after 3 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

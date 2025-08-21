@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracker - ECE Student</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #4a5568;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Styles */
+        .form-section {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        /* Timetable Styles */
+        .timetable-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .timetable {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 1000px;
+        }
+
+        .timetable th, .timetable td {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .timetable th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .timetable td {
+            background: #f7fafc;
+            position: relative;
+        }
+
+        .timetable input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        .timetable input:focus {
+            background: white;
+            box-shadow: 0 0 0 2px #667eea;
+            outline: none;
+        }
+
+        .break-cell {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .day-header {
+            background: #4a5568 !important;
+            color: white !important;
+            font-weight: 700;
+        }
+
+        /* Attendance Marking Styles */
+        .date-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .holiday-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff5f5;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid #fed7d7;
+        }
+
+        .holiday-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .attendance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .period-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .period-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .period-card.present {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .period-card.absent {
+            border-color: #e53e3e;
+            background: #fed7d7;
+        }
+
+        .period-card.holiday {
+            border-color: #ed8936;
+            background: #fffbf0;
+        }
+
+        .period-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .period-time {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .period-subject {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .attendance-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .attendance-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .attendance-btn.active.present {
+            background: #48bb78;
+            border-color: #48bb78;
+            color: white;
+        }
+
+        .attendance-btn.active.absent {
+            background: #e53e3e;
+            border-color: #e53e3e;
+            color: white;
+        }
+
+        .attendance-btn.active.holiday {
+            background: #ed8936;
+            border-color: #ed8936;
+            color: white;
+        }
+
+        /* Dashboard Styles */
+        .filter-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .subject-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .subject-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .subject-card.low-attendance {
+            border-color: #e53e3e;
+            background: #fed7d7;
+        }
+
+        .subject-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.low {
+            background: linear-gradient(90deg, #e53e3e, #c53030);
+        }
+
+        .progress-fill.medium {
+            background: linear-gradient(90deg, #ed8936, #dd6b20);
+        }
+
+        .attendance-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .threshold-warning {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #48bb78;
+            color: #22543d;
+        }
+
+        .alert-warning {
+            background: #fffbf0;
+            border: 1px solid #ed8936;
+            color: #744210;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            border: 1px solid #e53e3e;
+            color: #742a2a;
+        }
+
+        .alert-info {
+            background: #ebf8ff;
+            border: 1px solid #3182ce;
+            color: #2a4365;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .nav-tab {
+                flex: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .date-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .attendance-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                text-align: center;
+            }
+        }
+
+        .export-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .semester-info {
+            background: #ebf8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3182ce;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 ECE Attendance Tracker</h1>
+            <p>5th Semester Electronics and Communication Engineering</p>
+            <p>Karnataka, India</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('setup')">🔧 Setup</button>
+            <button class="nav-tab" onclick="showTab('timetable')">📅 Timetable</button>
+            <button class="nav-tab" onclick="showTab('attendance')">✅ Mark Attendance</button>
+            <button class="nav-tab" onclick="showTab('dashboard')">📊 Dashboard</button>
+        </div>
+
+        <!-- Setup Tab -->
+        <div id="setup" class="tab-content active">
+            <h2>Semester Setup</h2>
+            
+            <div class="form-section">
+                <h3>Semester Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="semesterStart">Semester Start Date</label>
+                        <input type="date" id="semesterStart">
+                    </div>
+                    <div class="form-group">
+                        <label for="semesterEnd">Semester End Date</label>
+                        <input type="date" id="semesterEnd">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cie1Date">CIE-1 Date</label>
+                        <input type="date" id="cie1Date">
+                    </div>
+                    <div class="form-group">
+                        <label for="cie2Date">CIE-2 Date</label>
+                        <input type="date" id="cie2Date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceThreshold">Minimum Attendance Threshold (%)</label>
+                    <input type="number" id="attendanceThreshold" value="75" min="0" max="100">
+                </div>
+                <button class="btn" onclick="saveSemesterInfo()">💾 Save Semester Info</button>
+            </div>
+
+            <div id="semesterInfoDisplay" class="semester-info" style="display: none;"></div>
+
+            <div class="form-section">
+                <h3>Subject Management</h3>
+                <div class="form-group">
+                    <label for="subjectInput">Add Subject</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="subjectInput" placeholder="e.g., Digital Signal Processing">
+                        <button class="btn" onclick="addSubject()">Add</button>
+                    </div>
+                </div>
+                <div id="subjectList" class="subject-list"></div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+
+        <!-- Timetable Tab -->
+        <div id="timetable" class="tab-content">
+            <h2>Weekly Timetable Setup</h2>
+            <p>Enter your subjects in each time slot. Leave empty for free periods.</p>
+            
+            <div class="timetable-container">
+                <table class="timetable" id="timetableTable">
+                    <thead>
+                        <tr>
+                            <th>Day/Hour</th>
+                            <th>10:00 am - 10:55 am</th>
+                            <th>10:55 am - 11:50 am</th>
+                            <th>11:50 am - 12:10 pm</th>
+                            <th>12:10 pm - 1:05 pm</th>
+                            <th>1:05 pm - 2:00 pm</th>
+                            <th>2:00 pm - 3:10 pm</th>
+                            <th>3:10 pm - 4:00 pm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="day-header">Monday</td>
+                            <td><input type="text" data-day="Monday" data-period="0" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Monday" data-period="1" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Monday" data-period="2" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Monday" data-period="3" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Monday" data-period="4" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Monday" data-period="5" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Monday" data-period="6" onchange="updateTimetableCell(this)"></td>
+                        </tr>
+                        <tr>
+                            <td class="day-header">Tuesday</td>
+                            <td><input type="text" data-day="Tuesday" data-period="0" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Tuesday" data-period="1" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Tuesday" data-period="2" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Tuesday" data-period="3" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Tuesday" data-period="4" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Tuesday" data-period="5" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Tuesday" data-period="6" onchange="updateTimetableCell(this)"></td>
+                        </tr>
+                        <tr>
+                            <td class="day-header">Wednesday</td>
+                            <td><input type="text" data-day="Wednesday" data-period="0" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Wednesday" data-period="1" onchange="updateTimetableCell(this)"></td>
+                            <td class="break-cell">SHORT BREAK</td>
+                            <td><input type="text" data-day="Wednesday" data-period="3" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Wednesday" data-period="4" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Wednesday" data-period="5" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Wednesday" data-period="6" onchange="updateTimetableCell(this)"></td>
+                        </tr>
+                        <tr>
+                            <td class="day-header">Thursday</td>
+                            <td><input type="text" data-day="Thursday" data-period="0" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Thursday" data-period="1" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Thursday" data-period="2" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Thursday" data-period="3" onchange="updateTimetableCell(this)"></td>
+                            <td class="break-cell">LUNCH BREAK</td>
+                            <td><input type="text" data-day="Thursday" data-period="5" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Thursday" data-period="6" onchange="updateTimetableCell(this)"></td>
+                        </tr>
+                        <tr>
+                            <td class="day-header">Friday</td>
+                            <td><input type="text" data-day="Friday" data-period="0" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Friday" data-period="1" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Friday" data-period="2" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Friday" data-period="3" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Friday" data-period="4" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Friday" data-period="5" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Friday" data-period="6" onchange="updateTimetableCell(this)"></td>
+                        </tr>
+                        <tr>
+                            <td class="day-header">Saturday</td>
+                            <td><input type="text" data-day="Saturday" data-period="0" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Saturday" data-period="1" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Saturday" data-period="2" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Saturday" data-period="3" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Saturday" data-period="4" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Saturday" data-period="5" onchange="updateTimetableCell(this)"></td>
+                            <td><input type="text" data-day="Saturday" data-period="6" onchange="updateTimetableCell(this)"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="saveTimetable()">💾 Save Timetable</button>
+            </div>
+        </div>
+
+        <!-- Attendance Tab -->
+        <div id="attendance" class="tab-content">
+            <h2>Mark Attendance</h2>
+            
+            <div class="date-controls">
+                <div class="date-selector">
+                    <label for="attendanceDate">Select Date:</label>
+                    <input type="date" id="attendanceDate" onchange="loadAttendanceForDate()">
+                    <button class="btn" onclick="setToday()">📅 Today</button>
+                </div>
+                <div class="holiday-toggle">
+                    <input type="checkbox" id="holidayToggle" onchange="toggleHoliday()">
+                    <label for="holidayToggle">Mark entire day as Holiday</label>
+                </div>
+            </div>
+
+            <div id="attendanceAlert"></div>
+            <div class="attendance-grid" id="attendanceGrid"></div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <h2>Attendance Summary</h2>
+            
+            <div class="filter-section">
+                <h3>View Attendance For:</h3>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setFilter('entire')" data-filter="entire">Entire Semester</button>
+                    <button class="filter-btn" onclick="setFilter('before-cie1')" data-filter="before-cie1">Before CIE-1</button>
+                    <button class="filter-btn" onclick="setFilter('between-cie')" data-filter="between-cie">Between CIE-1 & CIE-2</button>
+                    <button class="filter-btn" onclick="setFilter('after-cie2')" data-filter="after-cie2">After CIE-2</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="overallPercentage">0%</div>
+                    <div class="stat-label">Overall Attendance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalClasses">0</div>
+                    <div class="stat-label">Total Classes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="attendedClasses">0</div>
+                    <div class="stat-label">Classes Attended</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="holidayClasses">0</div>
+                    <div class="stat-label">Holiday Classes</div>
+                </div>
+            </div>
+
+            <div class="subject-stats" id="subjectStats"></div>
+
+            <div class="export-section">
+                <h3>Export Data</h3>
+                <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                    <button class="btn" onclick="exportToCSV()">📄 Export to CSV</button>
+                    <button class="btn" onclick="exportToJSON()">📋 Export to JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+        let timetable = JSON.parse(localStorage.getItem('timetable')) || {};
+        let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+        let semesterInfo = JSON.parse(localStorage.getItem('semesterInfo')) || {};
+        let currentFilter = 'entire';
+
+        const timeSlots = [
+            '10:00 am - 10:55 am',
+            '10:55 am - 11:50 am', 
+            '11:50 am - 12:10 pm',
+            '12:10 pm - 1:05 pm',
+            '1:05 pm - 2:00 pm',
+            '2:00 pm - 3:10 pm',
+            '3:10 pm - 4:00 pm'
+        ];
+
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        // Initialize the app
+        window.onload = function() {
+            loadSemesterInfo();
+            loadSubjects();
+            loadTimetable();
+            setToday();
+            updateDashboard();
+        };
+
+        // Tab functionality
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'attendance') {
+                loadAttendanceForDate();
+            } else if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        // Semester management
+        function saveSemesterInfo() {
+            const semesterStart = document.getElementById('semesterStart').value;
+            const semesterEnd = document.getElementById('semesterEnd').value;
+            const cie1Date = document.getElementById('cie1Date').value;
+            const cie2Date = document.getElementById('cie2Date').value;
+            const threshold = document.getElementById('attendanceThreshold').value;
+
+            if (!semesterStart || !semesterEnd) {
+                showAlert('danger', 'Please enter both semester start and end dates.');
+                return;
+            }
+
+            semesterInfo = {
+                semesterStart,
+                semesterEnd,
+                cie1Date,
+                cie2Date,
+                attendanceThreshold: parseInt(threshold) || 75
+            };
+
+            localStorage.setItem('semesterInfo', JSON.stringify(semesterInfo));
+            loadSemesterInfo();
+            showAlert('success', 'Semester information saved successfully!');
+        }
+
+        function loadSemesterInfo() {
+            if (Object.keys(semesterInfo).length > 0) {
+                document.getElementById('semesterStart').value = semesterInfo.semesterStart || '';
+                document.getElementById('semesterEnd').value = semesterInfo.semesterEnd || '';
+                document.getElementById('cie1Date').value = semesterInfo.cie1Date || '';
+                document.getElementById('cie2Date').value = semesterInfo.cie2Date || '';
+                document.getElementById('attendanceThreshold').value = semesterInfo.attendanceThreshold || 75;
+
+                const display = document.getElementById('semesterInfoDisplay');
+                display.style.display = 'block';
+                display.innerHTML = `
+                    <h4>Current Semester Information</h4>
+                    <p><strong>Semester:</strong> ${formatDate(semesterInfo.semesterStart)} to ${formatDate(semesterInfo.semesterEnd)}</p>
+                    <p><strong>CIE-1:</strong> ${semesterInfo.cie1Date ? formatDate(semesterInfo.cie1Date) : 'Not set'}</p>
+                    <p><strong>CIE-2:</strong> ${semesterInfo.cie2Date ? formatDate(semesterInfo.cie2Date) : 'Not set'}</p>
+                    <p><strong>Minimum Attendance:</strong> ${semesterInfo.attendanceThreshold}%</p>
+                `;
+            }
+        }
+
+        // Subject management
+        function addSubject() {
+            const input = document.getElementById('subjectInput');
+            const subjectName = input.value.trim();
+            
+            if (subjectName && !subjects.includes(subjectName)) {
+                subjects.push(subjectName);
+                saveSubjects();
+                loadSubjects();
+                input.value = '';
+                showAlert('success', `Subject "${subjectName}" added successfully!`);
+            }
+        }
+
+        function removeSubject(subjectName) {
+            if (confirm(`Are you sure you want to remove "${subjectName}"? This will delete all related attendance data.`)) {
+                subjects = subjects.filter(s => s !== subjectName);
+                
+                // Remove from timetable
+                Object.keys(timetable).forEach(day => {
+                    Object.keys(timetable[day]).forEach(period => {
+                        if (timetable[day][period] === subjectName) {
+                            delete timetable[day][period];
+                        }
+                    });
+                });
+                
+                // Remove from attendance
+                Object.keys(attendance).forEach(date => {
+                    Object.keys(attendance[date]).forEach(key => {
+                        if (key.includes(subjectName)) {
+                            delete attendance[date][key];
+                        }
+                    });
+                });
+                
+                saveSubjects();
+                saveTimetable();
+                saveAttendance();
+                loadSubjects();
+                loadTimetable();
+                updateDashboard();
+                showAlert('warning', `Subject "${subjectName}" removed successfully.`);
+            }
+        }
+
+        function saveSubjects() {
+            localStorage.setItem('subjects', JSON.stringify(subjects));
+        }
+
+        function loadSubjects() {
+            const subjectList = document.getElementById('subjectList');
+            subjectList.innerHTML = '';
+            
+            if (subjects.length === 0) {
+                subjectList.innerHTML = '<p style="color: #718096; text-align: center; padding: 20px;">No subjects added yet. Add some subjects to get started!</p>';
+                return;
+            }
+            
+            subjects.forEach(subject => {
+                const subjectItem = document.createElement('div');
+                subjectItem.className = 'subject-card';
+                subjectItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea;';
+                subjectItem.innerHTML = `
+                    <span style="font-weight: 600;">${subject}</span>
+                    <button class="btn btn-danger" onclick="removeSubject('${subject}')" style="padding: 5px 10px; font-size: 14px;">Remove</button>
+                `;
+                subjectList.appendChild(subjectItem);
+            });
+        }
+
+        // Timetable management
+        function updateTimetableCell(input) {
+            const day = input.dataset.day;
+            const period = parseInt(input.dataset.period);
+            const subject = input.value.trim();
+
+            if (!timetable[day]) {
+                timetable[day] = {};
+            }
+
+            if (subject) {
+                timetable[day][period] = subject;
+            } else {
+                delete timetable[day][period];
+            }
+        }
+
+        function saveTimetable() {
+            localStorage.setItem('timetable', JSON.stringify(timetable));
+            showAlert('success', 'Timetable saved successfully!');
+        }
+
+        function loadTimetable() {
+            // Load existing timetable data into inputs
+            days.forEach(day => {
+                for (let period = 0; period < 7; period++) {
+                    const input = document.querySelector(`input[data-day="${day}"][data-period="${period}"]`);
+                    if (input && timetable[day] && timetable[day][period]) {
+                        input.value = timetable[day][period];
+                    }
+                }
+            });
+        }
+
+        // Attendance management
+        function setToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+            loadAttendanceForDate();
+        }
+
+        function loadAttendanceForDate() {
+            const dateInput = document.getElementById('attendanceDate');
+            const selectedDate = dateInput.value;
+            
+            if (!selectedDate) return;
+            
+            const dayName = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+            const daySchedule = timetable[dayName] || {};
+            
+            const grid = document.getElementById('attendanceGrid');
+            const alertDiv = document.getElementById('attendanceAlert');
+            const holidayToggle = document.getElementById('holidayToggle');
+            
+            grid.innerHTML = '';
+            alertDiv.innerHTML = '';
+
+            // Check if day is marked as holiday
+            const isHoliday = attendance[selectedDate] && attendance[selectedDate]['__holiday__'];
+            holidayToggle.checked = isHoliday;
+
+            if (Object.keys(daySchedule).length === 0) {
+                alertDiv.innerHTML = '<div class="alert alert-warning">No classes scheduled for this day.</div>';
+                return;
+            }
+
+            if (isHoliday) {
+                alertDiv.innerHTML = '<div class="alert alert-info">This day is marked as a Holiday. All classes are excluded from attendance calculations.</div>';
+            }
+
+            // Create attendance cards for each scheduled class
+            timeSlots.forEach((timeSlot, index) => {
+                const subject = daySchedule[index];
+                if (subject) {
+                    const periodCard = document.createElement('div');
+                    const attendanceKey = `${selectedDate}_${index}_${subject}`;
+                    
+                    let currentStatus = 'none';
+                    if (attendance[selectedDate]) {
+                        if (attendance[selectedDate]['__holiday__']) {
+                            currentStatus = 'holiday';
+                        } else if (attendance[selectedDate][attendanceKey] === true) {
+                            currentStatus = 'present';
+                        } else if (attendance[selectedDate][attendanceKey] === false) {
+                            currentStatus = 'absent';
+                        }
+                    }
+                    
+                    periodCard.className = `period-card ${currentStatus !== 'none' ? currentStatus : ''}`;
+                    periodCard.innerHTML = `
+                        <div class="period-header">
+                            <div class="period-time">${timeSlot}</div>
+                        </div>
+                        <div class="period-subject">${subject}</div>
+                        <div class="attendance-buttons">
+                            <button class="attendance-btn ${currentStatus === 'present' ? 'active present' : ''}" 
+                                    onclick="markAttendance('${selectedDate}', ${index}, '${subject}', 'present', this)">
+                                ✓ Present
+                            </button>
+                            <button class="attendance-btn ${currentStatus === 'absent' ? 'active absent' : ''}" 
+                                    onclick="markAttendance('${selectedDate}', ${index}, '${subject}', 'absent', this)">
+                                ✗ Absent
+                            </button>
+                            <button class="attendance-btn ${currentStatus === 'holiday' ? 'active holiday' : ''}" 
+                                    onclick="markAttendance('${selectedDate}', ${index}, '${subject}', 'holiday', this)">
+                                🏖️ Holiday
+                            </button>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(periodCard);
+                }
+            });
+        }
+
+        function markAttendance(date, period, subject, status, buttonElement) {
+            const attendanceKey = `${date}_${period}_${subject}`;
+            
+            if (!attendance[date]) {
+                attendance[date] = {};
+            }
+
+            // Clear previous status
+            const card = buttonElement.closest('.period-card');
+            const buttons = card.querySelectorAll('.attendance-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active', 'present', 'absent', 'holiday');
+            });
+            card.className = 'period-card';
+
+            // Set new status
+            if (status === 'present') {
+                attendance[date][attendanceKey] = true;
+                buttonElement.classList.add('active', 'present');
+                card.classList.add('present');
+            } else if (status === 'absent') {
+                attendance[date][attendanceKey] = false;
+                buttonElement.classList.add('active', 'absent');
+                card.classList.add('absent');
+            } else if (status === 'holiday') {
+                // Remove individual attendance record and mark as holiday
+                delete attendance[date][attendanceKey];
+                buttonElement.classList.add('active', 'holiday');
+                card.classList.add('holiday');
+            }
+
+            saveAttendance();
+        }
+
+        function toggleHoliday() {
+            const dateInput = document.getElementById('attendanceDate');
+            const selectedDate = dateInput.value;
+            const isHoliday = document.getElementById('holidayToggle').checked;
+            
+            if (!selectedDate) return;
+
+            if (!attendance[selectedDate]) {
+                attendance[selectedDate] = {};
+            }
+
+            if (isHoliday) {
+                // Mark entire day as holiday
+                attendance[selectedDate]['__holiday__'] = true;
+                
+                // Clear individual attendance records for this day
+                Object.keys(attendance[selectedDate]).forEach(key => {
+                    if (key !== '__holiday__') {
+                        delete attendance[selectedDate][key];
+                    }
+                });
+                
+                showAlert('info', 'Day marked as Holiday. All classes excluded from attendance calculations.');
+            } else {
+                // Remove holiday marking
+                delete attendance[selectedDate]['__holiday__'];
+            }
+
+            saveAttendance();
+            loadAttendanceForDate();
+        }
+
+        function saveAttendance() {
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+        }
+
+        // Dashboard and statistics
+        function setFilter(filterType) {
+            currentFilter = filterType;
+            
+            // Update filter button states
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === filterType) {
+                    btn.classList.add('active');
+                }
+            });
+
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const stats = calculateStats();
+            
+            document.getElementById('overallPercentage').textContent = stats.overall.percentage + '%';
+            document.getElementById('totalClasses').textContent = stats.overall.total;
+            document.getElementById('attendedClasses').textContent = stats.overall.attended;
+            document.getElementById('holidayClasses').textContent = stats.overall.holidays;
+            
+            const subjectStatsDiv = document.getElementById('subjectStats');
+            subjectStatsDiv.innerHTML = '';
+            
+            if (Object.keys(stats.subjects).length === 0) {
+                subjectStatsDiv.innerHTML = '<p style="color: #718096; text-align: center; padding: 40px; grid-column: 1 / -1;">No attendance data available. Start marking your attendance!</p>';
+                return;
+            }
+            
+            Object.entries(stats.subjects).forEach(([subject, data]) => {
+                const card = document.createElement('div');
+                const threshold = semesterInfo.attendanceThreshold || 75;
+                const isLowAttendance = data.percentage < threshold;
+                
+                card.className = `subject-card ${isLowAttendance ? 'low-attendance' : ''}`;
+                
+                let progressClass = '';
+                if (data.percentage < 60) progressClass = 'low';
+                else if (data.percentage < 75) progressClass = 'medium';
+                
+                card.innerHTML = `
+                    <div class="subject-name">${subject}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${progressClass}" style="width: ${data.percentage}%"></div>
+                    </div>
+                    <div class="attendance-details">
+                        <span>Present: ${data.attended}</span>
+                        <span>Total: ${data.total}</span>
+                        <span><strong>${data.percentage}%</strong></span>
+                    </div>
+                    ${isLowAttendance ? `<div class="threshold-warning">⚠️ Below ${threshold}% threshold</div>` : ''}
+                `;
+                
+                subjectStatsDiv.appendChild(card);
+            });
+        }
+
+        function calculateStats() {
+            const stats = {
+                overall: { total: 0, attended: 0, holidays: 0, percentage: 0 },
+                subjects: {}
+            };
+
+            // Initialize subject stats
+            subjects.forEach(subject => {
+                stats.subjects[subject] = { total: 0, attended: 0, holidays: 0, percentage: 0 };
+            });
+
+            // Get date range based on current filter
+            const dateRange = getDateRangeForFilter();
+
+            // Count attendance within date range
+            Object.entries(attendance).forEach(([date, dayAttendance]) => {
+                if (!isDateInRange(date, dateRange)) return;
+
+                // Check if entire day is holiday
+                if (dayAttendance['__holiday__']) {
+                    const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+                    const daySchedule = timetable[dayName] || {};
+                    
+                    Object.values(daySchedule).forEach(subject => {
+                        if (stats.subjects[subject]) {
+                            stats.subjects[subject].holidays++;
+                            stats.overall.holidays++;
+                        }
+                    });
+                    return;
+                }
+
+                // Count individual class attendance
+                Object.entries(dayAttendance).forEach(([key, value]) => {
+                    if (key === '__holiday__') return;
+                    
+                    const parts = key.split('_');
+                    if (parts.length >= 3) {
+                        const subject = parts.slice(2).join('_');
+                        if (stats.subjects[subject]) {
+                            stats.subjects[subject].total++;
+                            stats.overall.total++;
+                            
+                            if (value === true) {
+                                stats.subjects[subject].attended++;
+                                stats.overall.attended++;
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Add classes that haven't been marked yet (count as possible classes)
+            if (semesterInfo.semesterStart && semesterInfo.semesterEnd) {
+                const startDate = new Date(semesterInfo.semesterStart);
+                const endDate = new Date(semesterInfo.semesterEnd);
+                
+                for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+                    const dateStr = date.toISOString().split('T')[0];
+                    if (!isDateInRange(dateStr, dateRange)) continue;
+                    
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                    const daySchedule = timetable[dayName] || {};
+                    
+                    if (!attendance[dateStr] || !attendance[dateStr]['__holiday__']) {
+                        Object.values(daySchedule).forEach(subject => {
+                            if (stats.subjects[subject]) {
+                                const attendanceKey = `${dateStr}_${Object.keys(daySchedule).find(k => daySchedule[k] === subject)}_${subject}`;
+                                if (!attendance[dateStr] || !(attendanceKey in attendance[dateStr])) {
+                                    stats.subjects[subject].total++;
+                                    stats.overall.total++;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+
+            // Calculate percentages
+            stats.overall.percentage = stats.overall.total > 0 
+                ? Math.round((stats.overall.attended / stats.overall.total) * 100) 
+                : 0;
+            
+            Object.keys(stats.subjects).forEach(subject => {
+                const subjectData = stats.subjects[subject];
+                subjectData.percentage = subjectData.total > 0 
+                    ? Math.round((subjectData.attended / subjectData.total) * 100) 
+                    : 0;
+            });
+            
+            return stats;
+        }
+
+        function getDateRangeForFilter() {
+            const startDate = semesterInfo.semesterStart;
+            const endDate = semesterInfo.semesterEnd;
+            const cie1Date = semesterInfo.cie1Date;
+            const cie2Date = semesterInfo.cie2Date;
+
+            switch (currentFilter) {
+                case 'before-cie1':
+                    return { start: startDate, end: cie1Date };
+                case 'between-cie':
+                    return { start: cie1Date, end: cie2Date };
+                case 'after-cie2':
+                    return { start: cie2Date, end: endDate };
+                case 'entire':
+                default:
+                    return { start: startDate, end: endDate };
+            }
+        }
+
+        function isDateInRange(date, range) {
+            if (!range.start || !range.end) return true;
+            return date >= range.start && date <= range.end;
+        }
+
+        // Export functionality
+        function exportToCSV() {
+            const stats = calculateStats();
+            let csv = 'Subject,Total Classes,Classes Attended,Holiday Classes,Attendance Percentage\n';
+            
+            Object.entries(stats.subjects).forEach(([subject, data]) => {
+                csv += `"${subject}",${data.total},${data.attended},${data.holidays},${data.percentage}%\n`;
+            });
+            
+            csv += `\nOverall,${stats.overall.total},${stats.overall.attended},${stats.overall.holidays},${stats.overall.percentage}%\n`;
+            csv += `\nFilter Applied: ${currentFilter.replace('-', ' ').toUpperCase()}\n`;
+            csv += `Export Date: ${new Date().toLocaleDateString()}\n`;
+            
+            downloadFile(csv, `attendance_report_${currentFilter}.csv`, 'text/csv');
+        }
+
+        function exportToJSON() {
+            const exportData = {
+                semesterInfo,
+                subjects,
+                timetable,
+                attendance,
+                statistics: calculateStats(),
+                currentFilter,
+                exportDate: new Date().toISOString()
+            };
+            
+            downloadFile(JSON.stringify(exportData, null, 2), `attendance_data_${currentFilter}.json`, 'application/json');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Utility functions
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear ALL data? This will delete semester info, subjects, timetable, and attendance records. This action cannot be undone.')) {
+                localStorage.removeItem('subjects');
+                localStorage.removeItem('timetable');
+                localStorage.removeItem('attendance');
+                localStorage.removeItem('semesterInfo');
+                
+                subjects = [];
+                timetable = {};
+                attendance = {};
+                semesterInfo = {};
+                
+                // Reset form fields
+                document.getElementById('semesterStart').value = '';
+                document.getElementById('semesterEnd').value = '';
+                document.getElementById('cie1Date').value = '';
+                document.getElementById('cie2Date').value = '';
+                document.getElementById('attendanceThreshold').value = '75';
+                document.getElementById('semesterInfoDisplay').style.display = 'none';
+                
+                loadSubjects();
+                loadTimetable();
+                loadAttendanceForDate();
+                updateDashboard();
+                
+                showAlert('warning', 'All data cleared successfully!');
+            }
+        }
+
+        function showAlert(type, message) {
+            const setupTab = document.getElementById('setup');
+            let existingAlert = setupTab.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            setupTab.insertBefore(alert, setupTab.firstChild.nextSibling);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Not set';
+            return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+    </script>
+</body>
+</html>
+                    

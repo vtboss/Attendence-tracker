@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECE Attendance Tracker - SGBIT</title>
+    <link rel="stylesheet" href="attendance_css.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="college-info">
+                <h1>📚 ECE Attendance Tracker</h1>
+                <p>S.G. Balekundri Institute of Technology</p>
+                <p>Department of Electronics & Communication Engineering</p>
+                <p>5th Semester - Academic Year 2025-26</p>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('setup')" data-tab="setup">
+                🔧 Setup & Timetable
+            </button>
+            <button class="nav-tab" onclick="showTab('attendance')" data-tab="attendance">
+                ✅ Mark Attendance
+            </button>
+            <button class="nav-tab" onclick="showTab('dashboard')" data-tab="dashboard">
+                📊 Dashboard
+            </button>
+        </div>
+
+        <!-- Setup & Timetable Tab -->
+        <div id="setup" class="tab-content active">
+            <div class="setup-section">
+                <h2>Semester Configuration</h2>
+                
+                <div class="form-section">
+                    <h3>📅 Semester & CIE Dates</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="semesterStart">Semester Start Date</label>
+                            <input type="date" id="semesterStart" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="semesterEnd">Semester End Date</label>
+                            <input type="date" id="semesterEnd" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cie1Date">CIE-1 Date</label>
+                            <input type="date" id="cie1Date">
+                        </div>
+                        <div class="form-group">
+                            <label for="cie2Date">CIE-2 Date</label>
+                            <input type="date" id="cie2Date">
+                        </div>
+                        <div class="form-group">
+                            <label for="attendanceThreshold">Minimum Attendance (%)</label>
+                            <input type="number" id="attendanceThreshold" value="75" min="0" max="100">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-primary" onclick="saveSemesterInfo()">
+                                💾 Save Semester Info
+                            </button>
+                        </div>
+                    </div>
+                    <div id="semesterInfoDisplay" class="semester-info-display"></div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📚 Subject Management</h3>
+                    <div class="subject-input-group">
+                        <input type="text" id="subjectInput" placeholder="Enter subject name (e.g., Digital Signal Processing)">
+                        <button class="btn btn-success" onclick="addSubject()">➕ Add Subject</button>
+                    </div>
+                    <div id="subjectList" class="subject-list"></div>
+                </div>
+            </div>
+
+            <div class="timetable-section">
+                <h2>📅 Weekly Timetable Setup</h2>
+                <p class="timetable-instruction">Select subjects for each time slot from the dropdown. Empty slots will be treated as free periods.</p>
+                
+                <div class="timetable-container">
+                    <table class="timetable" id="timetableTable">
+                        <thead>
+                            <tr>
+                                <th class="day-header">Day/Period</th>
+                                <th class="period-header">
+                                    <div>10:00 am</div>
+                                    <div>to</div>
+                                    <div>10:55 am</div>
+                                </th>
+                                <th class="period-header">
+                                    <div>10:55 am</div>
+                                    <div>to</div>
+                                    <div>11:50 am</div>
+                                </th>
+                                <th class="period-header">
+                                    <div>11:50 am</div>
+                                    <div>to</div>
+                                    <div>12:10 pm</div>
+                                </th>
+                                <th class="period-header">
+                                    <div>12:10 pm</div>
+                                    <div>to</div>
+                                    <div>1:05 pm</div>
+                                </th>
+                                <th class="period-header">
+                                    <div>1:05 pm</div>
+                                    <div>to</div>
+                                    <div>2:00 pm</div>
+                                </th>
+                                <th class="period-header">
+                                    <div>2:00 pm</div>
+                                    <div>to</div>
+                                    <div>3:10 pm</div>
+                                </th>
+                                <th class="period-header">
+                                    <div>3:10 pm</div>
+                                    <div>to</div>
+                                    <div>4:05 pm</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetableBody">
+                            <!-- Timetable rows will be generated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="timetable-actions">
+                    <button class="btn btn-primary" onclick="saveTimetable()">💾 Save Timetable</button>
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Marking Tab -->
+        <div id="attendance" class="tab-content">
+            <h2>✅ Mark Your Attendance</h2>
+            
+            <div class="date-controls">
+                <div class="date-selector">
+                    <label for="attendanceDate">📅 Select Date:</label>
+                    <input type="date" id="attendanceDate" onchange="loadAttendanceForDate()">
+                    <button class="btn btn-today" onclick="setToday()">Today</button>
+                </div>
+                <div class="holiday-control">
+                    <label class="holiday-toggle">
+                        <input type="checkbox" id="holidayToggle" onchange="toggleHoliday()">
+                        <span class="holiday-label">🏖️ Mark entire day as Holiday</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="attendanceAlert" class="alert-container"></div>
+            <div id="dayInfo" class="day-info"></div>
+            <div class="attendance-grid" id="attendanceGrid"></div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <h2>📊 Attendance Analytics</h2>
+            
+            <div class="filter-section">
+                <h3>📈 View Statistics For:</h3>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setFilter('entire')" data-filter="entire">
+                        Entire Semester
+                    </button>
+                    <button class="filter-btn" onclick="setFilter('before-cie1')" data-filter="before-cie1">
+                        Before CIE-1
+                    </button>
+                    <button class="filter-btn" onclick="setFilter('between-cie')" data-filter="between-cie">
+                        Between CIEs
+                    </button>
+                    <button class="filter-btn" onclick="setFilter('after-cie2')" data-filter="after-cie2">
+                        After CIE-2
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-overview">
+                <div class="stat-card overall">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="overallPercentage">0%</div>
+                        <div class="stat-label">Overall Attendance</div>
+                    </div>
+                </div>
+                <div class="stat-card total">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalClasses">0</div>
+                        <div class="stat-label">Total Classes</div>
+                    </div>
+                </div>
+                <div class="stat-card attended">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="attendedClasses">0</div>
+                        <div class="stat-label">Classes Attended</div>
+                    </div>
+                </div>
+                <div class="stat-card holidays">
+                    <div class="stat-icon">🏖️</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="holidayClasses">0</div>
+                        <div class="stat-label">Holiday Classes</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subject-analytics" id="subjectStats"></div>
+
+            <div class="export-section">
+                <h3>📤 Export Your Data</h3>
+                <div class="export-buttons">
+                    <button class="btn btn-export" onclick="exportToCSV()">
+                        📊 Export CSV Report
+                    </button>
+                    <button class="btn btn-export" onclick="exportToJSON()">
+                        💾 Backup Data (JSON)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="alert-container-fixed"></div>
+
+    <script src="attendance_js.js"></script>
+</body>
+</html>
