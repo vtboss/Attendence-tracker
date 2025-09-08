@@ -5,15 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ECE Attendance Tracker - SGBIT</title>
     <link rel="stylesheet" href="attendance_css.css">
+    <!-- Google Sign-In API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="mainContainer" style="display: none;">
         <div class="header">
             <div class="college-info">
                 <h1>📚 ECE Attendance Tracker</h1>
                 <p>S.G. Balekundri Institute of Technology</p>
                 <p>Department of Electronics & Communication Engineering</p>
                 <p>5th Semester - Academic Year 2025-26</p>
+            </div>
+            <div class="user-profile" id="userProfile">
+                <img id="userProfilePic" src="" alt="Profile Picture" class="profile-pic">
+                <div class="user-info">
+                    <span id="userName">Not signed in</span>
+                    <button id="signOutButton" class="btn btn-small" onclick="signOut()">Sign Out</button>
+                </div>
             </div>
         </div>
 
@@ -229,6 +238,30 @@
 
     <!-- Alert Container -->
     <div id="alertContainer" class="alert-container-fixed"></div>
+    
+    <!-- Login Container -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <h2>ECE Attendance Tracker</h2>
+            <p>Please sign in with your Google account to access the attendance tracker.</p>
+            <div id="g_id_onload"
+                data-client_id="1064570000268-ev09m92e8bihn4knhbsft31ln1o0es1a.apps.googleusercontent.com"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleCredentialResponse"
+                data-auto_prompt="true">
+            </div>
+
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left">
+            </div>
+        </div>
+    </div>
 
     <script src="attendance_js.js"></script>
 </body>

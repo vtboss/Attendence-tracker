@@ -1,9 +1,21 @@
 // Global Variables
-let subjects = JSON.parse(localStorage.getItem('ece_subjects')) || [];
-let timetable = JSON.parse(localStorage.getItem('ece_timetable')) || {};
-let attendance = JSON.parse(localStorage.getItem('ece_attendance')) || {};
-let semesterInfo = JSON.parse(localStorage.getItem('ece_semester_info')) || {};
+let currentUser = JSON.parse(localStorage.getItem('ece_current_user')) || null;
 let currentFilter = 'entire';
+let subjects = [];
+let timetable = {};
+let attendance = {};
+let semesterInfo = {};
+
+// Load user-specific data
+function loadUserData() {
+    if (!currentUser) return;
+    
+    const userId = currentUser.id;
+    subjects = JSON.parse(localStorage.getItem(`ece_subjects_${userId}`)) || [];
+    timetable = JSON.parse(localStorage.getItem(`ece_timetable_${userId}`)) || {};
+    attendance = JSON.parse(localStorage.getItem(`ece_attendance_${userId}`)) || {};
+    semesterInfo = JSON.parse(localStorage.getItem(`ece_semester_info_${userId}`)) || {};
+}
 
 // Time slots as per SGBIT timetable
 const timeSlots = [
@@ -20,10 +32,14 @@ const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
+    checkAuthStatus();
 });
 
 function initializeApp() {
+    // Load user-specific data first
+    loadUserData();
+    
+    // Then initialize the app with that data
     loadSemesterInfo();
     loadSubjects();
     generateTimetableGrid();
@@ -33,6 +49,119 @@ function initializeApp() {
     
     // Set up event listeners
     setupEventListeners();
+    
+    // Update UI with user info
+    updateUserProfile();
+}
+
+// Authentication Functions
+function checkAuthStatus() {
+    if (currentUser) {
+        // User is already signed in
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+        initializeApp();
+    } else {
+        // User is not signed in
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('mainContainer').style.display = 'none';
+    }
+}
+
+function handleCredentialResponse(response) {
+    try {
+        // Decode the JWT token
+        const responsePayload = decodeJwtResponse(response.credential);
+        
+        // Validate required fields
+        if (!responsePayload.sub || !responsePayload.name || !responsePayload.email) {
+            throw new Error('Missing required user information');
+        }
+        
+        // Save user info
+        currentUser = {
+            id: responsePayload.sub,
+            name: responsePayload.name,
+            email: responsePayload.email,
+            picture: responsePayload.picture || '',
+            signedInAt: new Date().toISOString()
+        };
+        
+        // Store in localStorage
+        localStorage.setItem('ece_current_user', JSON.stringify(currentUser));
+        
+        // Update UI
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+        
+        // Initialize app
+        initializeApp();
+        
+        showAlert('success', `✅ Welcome, ${currentUser.name}!`);
+    } catch (error) {
+        console.error('Authentication error:', error);
+        showAlert('danger', '❌ Authentication failed. Please try again.');
+    }
+}
+
+function decodeJwtResponse(token) {
+    try {
+        if (!token || typeof token !== 'string') {
+            throw new Error('Invalid token format');
+        }
+        
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            throw new Error('Invalid JWT token structure');
+        }
+        
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error('JWT decode error:', error);
+        throw new Error('Failed to decode authentication token');
+    }
+}
+
+function signOut() {
+    try {
+        // Clear user data
+        currentUser = null;
+        localStorage.removeItem('ece_current_user');
+        
+        // Show login screen
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('mainContainer').style.display = 'none';
+        
+        // Google sign-out
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+            google.accounts.id.disableAutoSelect();
+        }
+        
+        showAlert('success', '👋 You have been signed out successfully.');
+    } catch (error) {
+        console.error('Sign out error:', error);
+        showAlert('warning', '⚠️ Sign out may not have completed properly.');
+        
+        // Force logout anyway
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('mainContainer').style.display = 'none';
+    }
+}
+
+function updateUserProfile() {
+    if (currentUser) {
+        const profilePic = document.getElementById('userProfilePic');
+        const userName = document.getElementById('userName');
+        
+        if (profilePic) profilePic.src = currentUser.picture;
+        if (userName) userName.textContent = currentUser.name;
+    }
 }
 
 function setupEventListeners() {
@@ -74,6 +203,11 @@ function showTab(tabName) {
 
 // Semester Management
 function saveSemesterInfo() {
+    if (!currentUser) {
+        showAlert('danger', '⚠️ You must be signed in to save semester information.');
+        return;
+    }
+    
     const semesterStart = document.getElementById('semesterStart').value;
     const semesterEnd = document.getElementById('semesterEnd').value;
     const cie1Date = document.getElementById('cie1Date').value;
@@ -99,7 +233,7 @@ function saveSemesterInfo() {
         savedAt: new Date().toISOString()
     };
 
-    localStorage.setItem('ece_semester_info', JSON.stringify(semesterInfo));
+    localStorage.setItem(`ece_semester_info_${currentUser.id}`, JSON.stringify(semesterInfo));
     loadSemesterInfo();
     showAlert('success', '✅ Semester information saved successfully!');
 }
@@ -197,7 +331,8 @@ function removeSubject(subjectName) {
 }
 
 function saveSubjects() {
-    localStorage.setItem('ece_subjects', JSON.stringify(subjects));
+    if (!currentUser) return;
+    localStorage.setItem(`ece_subjects_${currentUser.id}`, JSON.stringify(subjects));
 }
 
 function loadSubjects() {
@@ -297,7 +432,8 @@ function updateTimetableCell(day, period, subject) {
 }
 
 function saveTimetable() {
-    localStorage.setItem('ece_timetable', JSON.stringify(timetable));
+    if (!currentUser) return;
+    localStorage.setItem(`ece_timetable_${currentUser.id}`, JSON.stringify(timetable));
     showAlert('success', '✅ Timetable saved successfully!');
 }
 
@@ -454,7 +590,8 @@ function toggleHoliday() {
 }
 
 function saveAttendance() {
-    localStorage.setItem('ece_attendance', JSON.stringify(attendance));
+    if (!currentUser) return;
+    localStorage.setItem(`ece_attendance_${currentUser.id}`, JSON.stringify(attendance));
 }
 
 // Dashboard and Analytics - FIXED
