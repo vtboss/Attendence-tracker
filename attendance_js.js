@@ -776,10 +776,13 @@ function setFilter(filter) {
     // Update active filter button
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
+        // Check if this button is the one we want to activate
+        if (btn.getAttribute('data-filter') === filter) {
+            btn.classList.add('active');
+        }
     });
-    const activeBtn = document.querySelector(`[onclick="setFilter('${filter}')"]`);
-    if (activeBtn) activeBtn.classList.add('active');
 
+    // Update the dashboard with the new filter
     updateDashboard();
 }
 
